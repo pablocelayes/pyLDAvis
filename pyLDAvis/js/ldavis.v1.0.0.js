@@ -77,11 +77,12 @@ var LDAvis = function(to_select, data_or_file_name) {
     var visID = to_select.replace("#", "");
     var topicID = visID + "-topic";
     var lambdaID = visID + "-lambda";
+    var topicLabelID = visID + "-label";
     var termID = visID + "-term";
     var topicDown = topicID + "-down";
     var topicUp = topicID + "-up";
     var topicClear = topicID + "-clear";
-    var topicLabeler = topicID + "-label";
+    var topicLabeler = topicID + "-labeler";
     var topicLabelerSaver = topicID + "-labelsaver";
     var topicLabelGiven = topicID + "-labelgiven";
 
@@ -253,6 +254,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 // Add topic label to topicLabels dictionary, only if it is valid:
                 if(prompt_label != "" && prompt_label !== null) {
                     topicLabels[topicNum] = prompt_label;
+                    d3.select("#" + topicLabelID + topicNum).text(prompt_label);
                 }
 
                 // Print to console for debugging:
@@ -263,6 +265,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             .on("click", function() {
                 // save json of topic labels:
                 download(JSON.stringify(topicLabels), 'topiclabeltest.json', 'txt');
+                // TODO: save to data as well
             });
 
         // create linear scaling to pixels (and add some padding on outer region of scatterplot)
@@ -413,6 +416,7 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .data(mdsData)
                 .enter();
 
+
         // text to indicate topic
         points.append("text")
             .attr("class", "txt")
@@ -423,6 +427,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return (yScale(+d.y) + 4);
             })
             .attr("stroke", "black")
+            .attr("id", function(d) {
+                return (topicLabelID + d.topics);
+            })
             .attr("opacity", 1)
             .style("text-anchor", "middle")
             .style("font-size", "11px")
