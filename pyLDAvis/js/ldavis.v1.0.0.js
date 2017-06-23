@@ -38,6 +38,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             old: 1,
             current: 1
         },
+        topicLabels, // customizable labels for topics ( initially just numbers )
         color1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
         color2 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
 
@@ -94,8 +95,6 @@ var LDAvis = function(to_select, data_or_file_name) {
     var sliderDivID = visID + "-sliderdiv";
     var lambdaLabelID = visID + "-lamlabel";
 
-    // Labeled topic dictionary:
-    var topicLabels = {};
 
     //////////////////////////////////////////////////////////////////////////////
 
@@ -120,6 +119,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         // R is the number of top relevant (or salient) words whose bars we display
         R = Math.min(data['R'], 30);
+
+        topicLabels = data['mdsDat']['topics'];
 
         // a (K x 5) matrix with columns x, y, topics, Freq, cluster (where x and y are locations for left panel)
         mdsData = [];
@@ -240,25 +241,21 @@ var LDAvis = function(to_select, data_or_file_name) {
                 // Get topic number:
                 var topicNum = document.getElementById(topicID).value;
 
+                var topicInd = topicNum - 1;
                 // Prompt for quesiton:
-
 
                 // Label topic, with previous label as default, if it exists:
                 var prompt_label;
-                if (topicNum in topicLabels) {
-                    prompt_label = prompt("Label this topic" + topicNum, topicLabels[topicNum]);
-                } else {
-                    prompt_label = prompt("Label this topic" + topicNum, "no-label");
-                }
+                prompt_label = prompt("Label this topic" + topicNum, topicLabels[topicInd]);
 
                 // Add topic label to topicLabels dictionary, only if it is valid:
                 if(prompt_label != "" && prompt_label !== null) {
-                    topicLabels[topicNum] = prompt_label;
+                    topicLabels[topicInd] = prompt_label;
                     d3.select("#" + topicLabelID + topicNum).text(prompt_label);
                 }
 
                 // Print to console for debugging:
-                console.log("topic label added:", topicNum, topicLabels[topicNum]);
+                console.log("topic label added:", topicNum, topicLabels[topicInd]);
             });
 
         d3.select("#" + topicLabelerSaver)
