@@ -60,14 +60,14 @@ def _extract_data(topic_model, corpus, dictionary, doc_topic_dists=None):
    # iterating over tuples
    if hasattr(topic_model, 'lda_beta'):
        topic = topic_model.lda_beta
-   else:
+    else:
        topic = topic_model.state.get_lambda()
-   topic = topic / topic.sum(axis=1)[:, None]
-   topic_term_dists = topic[:, fnames_argsort]
+    topic = topic / topic.sum(axis=1)[:, None]
+    topic_term_dists = topic[:, fnames_argsort]
 
-   assert topic_term_dists.shape[0] == doc_topic_dists.shape[1]
+    assert topic_term_dists.shape[0] == doc_topic_dists.shape[1]
 
-   return {'topic_term_dists': topic_term_dists, 'doc_topic_dists': doc_topic_dists,
+    return {'topic_term_dists': topic_term_dists, 'doc_topic_dists': doc_topic_dists,
            'doc_lengths': doc_lengths, 'vocab': vocab, 'term_frequency': term_freqs}
 
 def prepare(topic_model, corpus, dictionary, doc_topic_dist=None, **kwargs):

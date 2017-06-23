@@ -6,6 +6,8 @@
 
 var LDAvis = function(to_select, data_or_file_name) {
 
+    console.log("modified LDAvis initiated! (Moosley)");
+
     // This section sets up the logic for event handling
     var current_clicked = {
         what: "nothing",
@@ -22,7 +24,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         vis_state = {
             lambda: 1,
             topic: 0,
-            term: ""
+            term: "",
+            topicLabelGiven: ""
         };
 
     // Set up a few 'global' variables to hold the data:
@@ -35,7 +38,8 @@ var LDAvis = function(to_select, data_or_file_name) {
             old: 1,
             current: 1
         },
-        color1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
+        // color1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
+        color1 = "#008000",
         color2 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
 
     // Set the duration of each half of the transition:
@@ -78,6 +82,9 @@ var LDAvis = function(to_select, data_or_file_name) {
     var topicDown = topicID + "-down";
     var topicUp = topicID + "-up";
     var topicClear = topicID + "-clear";
+    var topicLabeler = topicID + "-label";
+    var topicLabelerSaver = topicID + "-labelsaver";
+    var topicLabelGiven = topicID + "-labelgiven";
 
     var leftPanelID = visID + "-leftpanel";
     var barFreqsID = visID + "-bar-freqs";
@@ -86,6 +93,9 @@ var LDAvis = function(to_select, data_or_file_name) {
     var lambdaZeroID = visID + "-lambdaZero";
     var sliderDivID = visID + "-sliderdiv";
     var lambdaLabelID = visID + "-lamlabel";
+
+    // Labeled topic dictionary:
+    var topicLabels = {};
 
     //////////////////////////////////////////////////////////////////////////////
 
@@ -102,7 +112,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             return 0;
         };
     }
-
 
     function visualize(data) {
 
@@ -224,6 +233,37 @@ var LDAvis = function(to_select, data_or_file_name) {
             .on("click", function() {
                 state_reset();
                 state_save(true);
+            });
+
+        d3.select("#" + topicLabeler)
+            .on("click", function() {
+                // Get topic number:
+                var topicNum = document.getElementById(topicID).value;
+
+                // Prompt for quesiton:
+
+
+                // Label topic, with previous label as default, if it exists:
+                var prompt_label;
+                if (topicNum in topicLabels) {
+                    prompt_label = prompt("Label this topic" + topicNum, topicLabels[topicNum]);
+                } else {
+                    prompt_label = prompt("Label this topic" + topicNum, "no-label");
+                }
+
+                // Add topic label to topicLabels dictionary, only if it is valid:
+                if(prompt_label != "" && prompt_label !== null) {
+                    topicLabels[topicNum] = prompt_label;
+                }
+
+                // Print to console for debugging:
+                console.log("topic label added:", topicNum, topicLabels[topicNum]);
+            });
+
+        d3.select("#" + topicLabelerSaver)
+            .on("click", function() {
+                // save json of topic labels:
+                download(JSON.stringify(topicLabels), 'topiclabeltest.json', 'txt');
             });
 
         // create linear scaling to pixels (and add some padding on outer region of scatterplot)
@@ -635,11 +675,30 @@ var LDAvis = function(to_select, data_or_file_name) {
             next.innerHTML = "Next Topic";
             topicDiv.appendChild(next);
 
+            var label = document.createElement("button");
+            label.setAttribute("id", topicLabeler);
+            label.setAttribute("style", "margin-left: 5px");
+            label.innerHTML = "Label Topic";
+            topicDiv.appendChild(label);
+
+            var label_save = document.createElement("button");
+            label_save.setAttribute("id", topicLabelerSaver);
+            label_save.setAttribute("style", "margin-left: 5px");
+            label_save.innerHTML = "Save Labels";
+            topicDiv.appendChild(label_save);
+
             var clear = document.createElement("button");
             clear.setAttribute("id", topicClear);
             clear.setAttribute("style", "margin-left: 5px");
             clear.innerHTML = "Clear Topic";
             topicDiv.appendChild(clear);
+
+            var topicLabelGiven = document.createElement("label");
+            topicLabelGiven.setAttribute("for", topicID);
+            topicLabelGiven.setAttribute("style", "font-family: sans-serif; font-size: 14px");
+            console.log(topicLabels)
+            topicLabelGiven.innerHTML = "[Topic Label - future feature] <span id='" + topicID + "-labelgiven'></span>";
+            topicDiv.appendChild(topicLabelGiven);
 
             // lambda inputs
             //var lambdaDivLeft = 8 + mdswidth + margin.left + termwidth;
@@ -1367,6 +1426,25 @@ var LDAvis = function(to_select, data_or_file_name) {
             vis_state.term = "";
             document.getElementById(topicID).value = vis_state.topic = 0;
             state_save(true);
+        }
+
+        // Function to download data to a file
+        function download(data, filename, type) {
+            var a = document.createElement("a"),
+                file = new Blob([data], {type: type});
+            if (window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(file, filename);
+            else { // Others
+                var url = URL.createObjectURL(file);
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            }
         }
 
     }
