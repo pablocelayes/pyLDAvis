@@ -24,8 +24,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         vis_state = {
             lambda: 1,
             topic: 0,
-            term: "",
-            topicLabelGiven: ""
+            term: ""
         };
 
     // Set up a few 'global' variables to hold the data:
@@ -83,10 +82,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     var topicDown = topicID + "-down";
     var topicUp = topicID + "-up";
     var topicClear = topicID + "-clear";
-    var topicLabeler = topicID + "-labeler";
-    var topicLabelerSaver = topicID + "-labelsaver";
     var vizDataSaver = topicID + "-vizsaver";    
-    var topicLabelGiven = topicID + "-labelgiven";
 
     var leftPanelID = visID + "-leftpanel";
     var barFreqsID = visID + "-bar-freqs";
@@ -236,43 +232,6 @@ var LDAvis = function(to_select, data_or_file_name) {
                 state_reset();
                 state_save(true);
             });
-
-        function changeLabel(topicInd) {
-            // Label topic, with previous label as default, if it exists:
-            // Prompt for quesiton:
-            var prompt_label;
-            var topicNum = topicInd + 1;
-
-            prompt_label = prompt("Label this topic " + topicNum, topicLabels[topicInd]);
-
-            // Add topic label to topicLabels dictionary, only if it is valid:
-            if(prompt_label != "" && prompt_label !== null) {
-                topicLabels[topicInd] = prompt_label;
-                d3.select("#" + topicLabelID + topicNum).text(prompt_label);
-            }
-
-            // Print to console for debugging:
-            console.log("topic label added:", topicNum, topicLabels[topicInd]);            
-        };
-
-        d3.select("#" + topicLabeler)
-            .on("click", function() {
-                // Get topic number:
-                var topicNum = document.getElementById(topicID).value;
-
-                var topicInd = topicNum - 1;
-
-                changeLabel(topicInd);
-
-        });
-
-        d3.select("#" + topicLabelerSaver)
-            .on("click", function() {
-                // save json of topic labels:
-                download(JSON.stringify(topicLabels), 'topiclabeltest.json', 'txt');
-                // TODO: save to data as well
-            });
-
 
         d3.select("#" + vizDataSaver)
             .on("click", function() {
@@ -452,18 +411,23 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return d.topics;
             });
 
+        function changeLabel(topicInd) {
+            // Label topic, with previous label as default, if it exists:
+            // Prompt for quesiton:
+            var prompt_label;
+            var topicNum = topicInd + 1;
 
-        // var cc = clickcancel();
-        
-        // d3.select("#" + topicID).call(cc);
-        
-        // cc.on('click', function() {
-        //     d3.select('#map').text(d3.select('#map').text() + 'click, ');
-        // });
-        
-        // cc.on('dblclick', function() {
-        //     console.log("now change label");
-        // });
+            prompt_label = prompt("Label this topic " + topicNum, topicLabels[topicInd]);
+
+            // Add topic label to topicLabels dictionary, only if it is valid:
+            if(prompt_label != "" && prompt_label !== null) {
+                topicLabels[topicInd] = prompt_label;
+                d3.select("#" + topicLabelID + topicNum).text(prompt_label);
+            }
+
+            // Print to console for debugging:
+            console.log("topic label added:", topicNum, topicLabels[topicInd]);            
+        };        
 
         // draw circles
         points.append("circle")
@@ -711,17 +675,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             next.innerHTML = "Next Topic";
             topicDiv.appendChild(next);
 
-            var label = document.createElement("button");
-            label.setAttribute("id", topicLabeler);
-            label.setAttribute("style", "margin-left: 5px");
-            label.innerHTML = "Label Topic";
-            topicDiv.appendChild(label);
-
-            var label_save = document.createElement("button");
-            label_save.setAttribute("id", topicLabelerSaver);
-            label_save.setAttribute("style", "margin-left: 5px");
-            label_save.innerHTML = "Save Labels";
-            topicDiv.appendChild(label_save);
+            var clear = document.createElement("button");
+            clear.setAttribute("id", topicClear);
+            clear.setAttribute("style", "margin-left: 5px");
+            clear.innerHTML = "Clear Topic";
+            topicDiv.appendChild(clear);
 
             var viz_save = document.createElement("button");
             viz_save.setAttribute("id", vizDataSaver);
@@ -729,18 +687,6 @@ var LDAvis = function(to_select, data_or_file_name) {
             viz_save.innerHTML = "Save Viz";
             topicDiv.appendChild(viz_save);
 
-            var clear = document.createElement("button");
-            clear.setAttribute("id", topicClear);
-            clear.setAttribute("style", "margin-left: 5px");
-            clear.innerHTML = "Clear Topic";
-            topicDiv.appendChild(clear);
-
-            var topicLabelGiven = document.createElement("label");
-            topicLabelGiven.setAttribute("for", topicID);
-            topicLabelGiven.setAttribute("style", "font-family: sans-serif; font-size: 14px");
-            console.log(topicLabels)
-            topicLabelGiven.innerHTML = "[Topic Label - future feature] <span id='" + topicID + "-labelgiven'></span>";
-            topicDiv.appendChild(topicLabelGiven);
 
             // lambda inputs
             //var lambdaDivLeft = 8 + mdswidth + margin.left + termwidth;
