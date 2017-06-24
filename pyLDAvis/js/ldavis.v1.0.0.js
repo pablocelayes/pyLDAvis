@@ -85,6 +85,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     var topicClear = topicID + "-clear";
     var topicLabeler = topicID + "-labeler";
     var topicLabelerSaver = topicID + "-labelsaver";
+    var vizDataSaver = topicID + "-vizsaver";    
     var topicLabelGiven = topicID + "-labelgiven";
 
     var leftPanelID = visID + "-leftpanel";
@@ -236,27 +237,34 @@ var LDAvis = function(to_select, data_or_file_name) {
                 state_save(true);
             });
 
+        function changeLabel(topicInd) {
+            // Label topic, with previous label as default, if it exists:
+            // Prompt for quesiton:
+            var prompt_label;
+            var topicNum = topicInd + 1;
+
+            prompt_label = prompt("Label this topic " + topicNum, topicLabels[topicInd]);
+
+            // Add topic label to topicLabels dictionary, only if it is valid:
+            if(prompt_label != "" && prompt_label !== null) {
+                topicLabels[topicInd] = prompt_label;
+                d3.select("#" + topicLabelID + topicNum).text(prompt_label);
+            }
+
+            // Print to console for debugging:
+            console.log("topic label added:", topicNum, topicLabels[topicInd]);            
+        };
+
         d3.select("#" + topicLabeler)
             .on("click", function() {
                 // Get topic number:
                 var topicNum = document.getElementById(topicID).value;
 
                 var topicInd = topicNum - 1;
-                // Prompt for quesiton:
 
-                // Label topic, with previous label as default, if it exists:
-                var prompt_label;
-                prompt_label = prompt("Label this topic" + topicNum, topicLabels[topicInd]);
+                changeLabel(topicInd);
 
-                // Add topic label to topicLabels dictionary, only if it is valid:
-                if(prompt_label != "" && prompt_label !== null) {
-                    topicLabels[topicInd] = prompt_label;
-                    d3.select("#" + topicLabelID + topicNum).text(prompt_label);
-                }
-
-                // Print to console for debugging:
-                console.log("topic label added:", topicNum, topicLabels[topicInd]);
-            });
+        });
 
         d3.select("#" + topicLabelerSaver)
             .on("click", function() {
@@ -264,6 +272,15 @@ var LDAvis = function(to_select, data_or_file_name) {
                 download(JSON.stringify(topicLabels), 'topiclabeltest.json', 'txt');
                 // TODO: save to data as well
             });
+
+
+        d3.select("#" + vizDataSaver)
+            .on("click", function() {
+                // save json of topic labels:
+                download(JSON.stringify(data), 'vizdata.json', 'txt');
+                // TODO: save to data as well
+            });
+
 
         // create linear scaling to pixels (and add some padding on outer region of scatterplot)
         var xrange = d3.extent(mdsData, function(d) {
@@ -435,6 +452,19 @@ var LDAvis = function(to_select, data_or_file_name) {
                 return d.topics;
             });
 
+
+        // var cc = clickcancel();
+        
+        // d3.select("#" + topicID).call(cc);
+        
+        // cc.on('click', function() {
+        //     d3.select('#map').text(d3.select('#map').text() + 'click, ');
+        // });
+        
+        // cc.on('dblclick', function() {
+        //     console.log("now change label");
+        // });
+
         // draw circles
         points.append("circle")
             .attr("class", "dot")
@@ -473,6 +503,9 @@ var LDAvis = function(to_select, data_or_file_name) {
                 document.getElementById(topicID).value = vis_state.topic = d.topics;
                 state_save(true);
                 topic_on(this);
+            })
+            .on("dblclick", function(d) {
+                changeLabel(d.topics - 1);
             })
             .on("mouseout", function(d) {
                 if (vis_state.topic != d.topics) topic_off(this);
@@ -689,6 +722,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             label_save.setAttribute("style", "margin-left: 5px");
             label_save.innerHTML = "Save Labels";
             topicDiv.appendChild(label_save);
+
+            var viz_save = document.createElement("button");
+            viz_save.setAttribute("id", vizDataSaver);
+            viz_save.setAttribute("style", "margin-left: 5px");
+            viz_save.innerHTML = "Save Viz";
+            topicDiv.appendChild(viz_save);
 
             var clear = document.createElement("button");
             clear.setAttribute("id", topicClear);
