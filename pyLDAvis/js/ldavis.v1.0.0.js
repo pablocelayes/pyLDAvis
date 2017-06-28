@@ -38,6 +38,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             current: 1
         },
         topicLabels, // customizable labels for topics ( initially just numbers )
+        showTopics, // boolean flags indicating which topics to show or hide
         color1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
         color2 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
 
@@ -81,6 +82,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     var termID = visID + "-term";
     var topicDown = topicID + "-down";
     var topicUp = topicID + "-up";
+    var topicToggle = topicID + "-toggle";
     var topicClear = topicID + "-clear";
     var vizDataSaver = topicID + "-vizsaver";    
 
@@ -109,6 +111,10 @@ var LDAvis = function(to_select, data_or_file_name) {
         };
     }
 
+    function onesArray(size) {
+        return Array.apply(null, Array(size)).map(Number.prototype.valueOf,1);
+    }
+
     function visualize(data) {
 
         // set the number of topics to global variable K:
@@ -119,6 +125,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
         topicLabels = data['mdsDat']['topics'];
 
+        var nTopics = topicLabels.length;
+        showTopics = onesArray(nTopics);
         // a (K x 5) matrix with columns x, y, topics, Freq, cluster (where x and y are locations for left panel)
         mdsData = [];
         for (var i = 0; i < K; i++) {
@@ -224,6 +232,21 @@ var LDAvis = function(to_select, data_or_file_name) {
                     vis_state.topic = value_new;
                     state_save(true);
                     document.getElementById(topicID).value = vis_state.topic;
+                }
+            });
+
+        d3.select("#" + topicToggle)
+            .on("click", function() {
+                var currentBubble = document.getElementById(topicID + vis_state.topic);
+                var currentLabel = document.getElementById(topicLabelID + vis_state.topic);
+                if (showTopics[vis_state.topic]) {
+                    showTopics[vis_state.topic] = 0;
+                    currentBubble.style.visibility = 'hidden';
+                    currentLabel.style.visibility = 'hidden';
+                } else {
+                    showTopics[vis_state.topic] = 1;
+                    currentBubble.style.visibility = 'visible';
+                    currentLabel.style.visibility = 'visible';
                 }
             });
 
@@ -674,6 +697,12 @@ var LDAvis = function(to_select, data_or_file_name) {
             next.setAttribute("style", "margin-left: 5px");
             next.innerHTML = "Next Topic";
             topicDiv.appendChild(next);
+
+            var toggle = document.createElement("button");
+            toggle.setAttribute("id", topicToggle);
+            toggle.setAttribute("style", "margin-left: 5px");
+            toggle.innerHTML = "Hide/Show Topic";
+            topicDiv.appendChild(toggle);
 
             var clear = document.createElement("button");
             clear.setAttribute("id", topicClear);

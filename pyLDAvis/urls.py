@@ -26,7 +26,9 @@ if DEV:
 
     LDAVIS_CSS_LOCAL = os.path.join(LOCAL_JS_DIR, "ldavis.css")
 else:
-    WWW_JS_DIR = "https://cdn.rawgit.com/pablocelayes/pyLDAvis/files/"
+    # WWW_JS_DIR = "https://cdn.rawgit.com/pablocelayes/pyLDAvis/files/"
+    # TODO: see how to deploy to a URL like the one above
+    WWW_JS_DIR = "https://cdn.rawgit.com/pablocelayes/pyLDAvis/master/pyLDAvis/js/"
     JS_VERSION = '1.0.0'
     CSS_VERSION = '1.0.0'
 
@@ -41,3 +43,4 @@ else:
 
 LDAVISMIN_URL = LDAVIS_URL
 LDAVISMIN_LOCAL = LDAVIS_LOCAL
+
