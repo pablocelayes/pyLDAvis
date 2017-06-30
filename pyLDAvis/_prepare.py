@@ -284,7 +284,7 @@ def _token_table(topic_info, term_topic_freq, vocab, term_frequency):
    return token_table.sort_values(by=['Term', 'Topic'])
 
 
-def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency, \
+def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency, sample_docs, \
             R=30, lambda_step=0.01, mds=js_PCoA, n_jobs=-1, \
             plot_opts={'xlab': 'PC1', 'ylab': 'PC2'}, sort_topics=True):
    """Transforms the topic model distributions and related corpus data into
@@ -400,10 +400,12 @@ def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequenc
    topic_coordinates = _topic_coordinates(mds, topic_term_dists, topic_proportion)
    client_topic_order = [x + 1 for x in topic_order]
 
-   return PreparedData(topic_coordinates, topic_info, token_table, R, lambda_step, plot_opts, client_topic_order)
+   return PreparedData(topic_coordinates, topic_info, token_table, R,\
+              lambda_step, plot_opts, client_topic_order, sample_docs)
 
 class PreparedData(namedtuple('PreparedData', ['topic_coordinates', 'topic_info', 'token_table',\
-                                               'R', 'lambda_step', 'plot_opts', 'topic_order'])):
+                                               'R', 'lambda_step', 'plot_opts', 'topic_order',\
+                                               'sample_docs'])):
     def to_dict(self):
        return {'mdsDat': self.topic_coordinates.to_dict(orient='list'),
                'tinfo': self.topic_info.to_dict(orient='list'),
@@ -411,7 +413,9 @@ class PreparedData(namedtuple('PreparedData', ['topic_coordinates', 'topic_info'
                'R': self.R,
                'lambda.step': self.lambda_step,
                'plot.opts': self.plot_opts,
-               'topic.order': self.topic_order}
+               'topic.order': self.topic_order,
+               'sample.docs': self.sample_docs
+              }
 
     def to_json(self):
        return json.dumps(self.to_dict(), cls=NumPyEncoder)

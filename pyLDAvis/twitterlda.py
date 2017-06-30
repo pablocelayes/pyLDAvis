@@ -8,6 +8,7 @@ import funcy as fp
 import pyLDAvis
 import numpy as np
 from os.path import join
+from os import listdir
 
 def _get_doc_lengths(model_data_path):
     with open(join(model_data_path, 'DocLengths.txt')) as f:
@@ -17,6 +18,33 @@ def _get_doc_lengths(model_data_path):
 def _get_term_freqs(model_data_path):
     with open(join(model_data_path, 'TermFreqs.txt')) as f:
         return [int(l.strip()) for l in f.readlines() if l]
+
+def _get_sample_docs(model_data_path,  n_topics, n_docs=10):
+    labeledtweets_path = join(model_data_path, 'TextWithLabel')
+
+    rawtweets_path = '/'.join(model_data_path.split('/')[:-1])\
+                        .replace('ModelRes', 'rawtweets')
+
+    clusters = [[] for i in range(n_topics)]
+    for userfname in listdir(labeledtweets_path):
+        labeled_tweets = open(join(labeledtweets_path, userfname)).readlines()
+        raw_tweets = open(join(rawtweets_path, userfname)).readlines()
+
+        for raw, labeled in zip(raw_tweets, labeled_tweets):
+            _, topic, terms = labeled.split(':')
+            topic_ind = int(topic.split('=')[-1])
+            # naive relevance just by proportion of terms coming from main topic
+            # TODO: implement something better
+            terms = terms.strip().split()
+            n_terms = len(terms) or 1
+            n_topic_terms = len([t for t in terms if t.split('/')[-1] == str(topic_ind)])
+            relevance = n_topic_terms * 1.0 / n_terms
+            clusters[topic_ind].append((raw.strip(), relevance))
+
+    for t in range(n_topics):
+        clusters[t] = sorted(clusters[t], key= lambda x: -x[1])[:n_docs]    
+    
+    return clusters    
 
 def _get_vocab(model_data_path):
     with open(join(model_data_path, 'uniWordMap.txt')) as f:
@@ -52,6 +80,7 @@ def _extract_data(model_data_path, ignore_topics=[], ignore_terms=[]):
     term_freqs = _get_term_freqs(model_data_path)
     topic_term_dists = _get_topic_term_dists(model_data_path)
     n_topics = topic_term_dists.shape[0]
+    sample_docs = _get_sample_docs(model_data_path, n_topics)
 
     assert len(term_freqs) == len(vocab), \
         ('Term frequencies and vocabulary are of different sizes, {} != {}.'
@@ -91,6 +120,7 @@ def _extract_data(model_data_path, ignore_topics=[], ignore_terms=[]):
     return {'vocab': vocab,
             'doc_lengths': doc_lengths,
             'term_frequency': term_freqs,
+            'sample_docs': sample_docs,
             'doc_topic_dists': doc_topic_dists.tolist(),
             'topic_term_dists': topic_term_dists.tolist()}
 

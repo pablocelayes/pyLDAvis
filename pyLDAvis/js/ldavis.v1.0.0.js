@@ -38,6 +38,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             current: 1
         },
         topicLabels, // customizable labels for topics ( initially just numbers )
+        sampleDocs, // text samples from each topic
         showTopics, // boolean flags indicating which topics to show or hide
         color1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
         color2 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
@@ -57,7 +58,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         barwidth = 530,
         barheight = 530,
         termwidth = 90, // width to add between two panels to display terms
-        mdsarea = mdsheight * mdswidth;
+        mdsarea = mdsheight * mdswidth,
+        sampleboxheight = 200;
     // controls how big the maximum circle can be
     // doesn't depend on data, only on mds width and height:
     var rMax = 60;
@@ -94,6 +96,8 @@ var LDAvis = function(to_select, data_or_file_name) {
     var sliderDivID = visID + "-sliderdiv";
     var lambdaLabelID = visID + "-lamlabel";
 
+    var sampleDocsID = visID + "-sampledocs";
+
 
     //////////////////////////////////////////////////////////////////////////////
 
@@ -124,6 +128,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         R = Math.min(data['R'], 30);
 
         topicLabels = data['mdsDat']['topics'];
+
+        sampleDocs = data['sample.docs'];
 
         var nTopics = topicLabels.length;
         showTopics = onesArray(nTopics);
@@ -297,7 +303,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         // Create new svg element (that will contain everything):
         var svg = d3.select(to_select).append("svg")
                 .attr("width", mdswidth + barwidth + margin.left + termwidth + margin.right)
-                .attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax);
+                .attr("height", mdsheight + 2 * margin.top + margin.bottom + 2 * rMax + sampleboxheight);
 
         // Create a group for the mds plot
         var mdsplot = svg.append("g")
@@ -406,6 +412,17 @@ var LDAvis = function(to_select, data_or_file_name) {
             .attr('class', "circleGuideLabelLarge")
             .style("text-anchor", "start")
             .text(defaultLabelLarge);
+
+
+        // Add a box for displaying sample docs 
+        d3.select("#" + leftPanelID).append("text")
+            .attr("x", 10)
+            .attr("y", mdsheight + 2 * newLarge + 30)
+            .attr("height", sampleboxheight)
+            // .attr("width", barguide.width)            
+            .attr("id", sampleDocsID)
+            .style("font-size", "16px")
+            .text("Sample docs");
 
         // bind mdsData to the points in the left panel:
         var points = mdsplot.selectAll("points")
@@ -1086,7 +1103,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // grab data bound to this element
             var d = circle.__data__;
             var Freq = Math.round(d.Freq * 10) / 10,
-                topics = d.topics;
+                topic_ind = d.topics;
 
             // change opacity and fill of the selected circle
             circle.style.opacity = highlight_opacity;
@@ -1104,11 +1121,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
                 .style("text-anchor", "middle")
                 .style("font-size", "16px")
-                .text("Top-" + R + " Most Relevant Terms for Topic " + topics + " (" + Freq + "% of tokens)");
+                .text("Top-" + R + " Most Relevant Terms for Topic " + topic_ind + " (" + Freq + "% of tokens)");
 
             // grab the bar-chart data for this topic only:
             var dat2 = lamData.filter(function(d) {
-                return d.Category == "Topic" + topics;
+                return d.Category == "Topic" + topic_ind;
             });
 
             // define relevance:
@@ -1196,6 +1213,34 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.selectAll(to_select + " .xaxis")
             //.attr("class", "xaxis")
                 .call(xAxis);
+
+
+            var insertLinebreaks = function (d) {
+                var el = d3.select(this);
+                var lines = el.text().split('\n');
+                console.log(lines[0]);
+                el.text('');
+
+                for (var i = 0; i < lines.length; i++) {
+                    var tspan = el.append('tspan').text(lines[i]);
+                    if (i > 0)
+                        tspan.attr('x', 0).attr('dy', '25');
+                }
+            };
+
+            // svg.selectAll('g.x.axis g text').each(insertLinebreaks);
+
+
+            // display sample docs
+            var docs = "";
+            for (var i = 0; i < 10; i++) {
+                docs = docs + sampleDocs[topic_ind][i][0] + '\n';
+            }            
+            d3.select('#' + sampleDocsID)
+                .text(docs);
+
+            d3.selectAll('#' + sampleDocsID)
+                .each(insertLinebreaks);
         }
 
 

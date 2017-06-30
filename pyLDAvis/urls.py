@@ -18,7 +18,9 @@ LOCAL_JS_DIR = os.path.join(__path__[0], "js")
 D3_LOCAL = os.path.join(LOCAL_JS_DIR, "d3.v3.min.js")
 
 if DEV:
-    WWW_JS_DIR = "https://rawgit.com/pablocelayes/pyLDAvis/master/pyLDAvis/js/"
+    # WWW_JS_DIR = "https://rawgit.com/pablocelayes/pyLDAvis/master/pyLDAvis/js/"
+    WWW_JS_DIR = "https://raw.githubusercontent.com/pablocelayes/pyLDAvis/master/pyLDAvis/js/"
+
     LDAVIS_URL = WWW_JS_DIR + "ldavis.js"
     LDAVIS_CSS_URL = WWW_JS_DIR + "ldavis.css"
 
@@ -28,7 +30,8 @@ if DEV:
 else:
     # WWW_JS_DIR = "https://cdn.rawgit.com/pablocelayes/pyLDAvis/files/"
     # TODO: see how to deploy to a URL like the one above
-    WWW_JS_DIR = "https://cdn.rawgit.com/pablocelayes/pyLDAvis/master/pyLDAvis/js/"
+    # WWW_JS_DIR = "https://cdn.rawgit.com/pablocelayes/pyLDAvis/master/pyLDAvis/js/"
+    WWW_JS_DIR = "https://raw.githubusercontent.com/pablocelayes/pyLDAvis/master/pyLDAvis/js/"
     JS_VERSION = '1.0.0'
     CSS_VERSION = '1.0.0'
 
