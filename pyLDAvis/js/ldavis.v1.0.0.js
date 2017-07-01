@@ -1103,7 +1103,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             // grab data bound to this element
             var d = circle.__data__;
             var Freq = Math.round(d.Freq * 10) / 10,
-                topic_ind = d.topics;
+                topicN = d.topics;
 
             // change opacity and fill of the selected circle
             circle.style.opacity = highlight_opacity;
@@ -1121,11 +1121,11 @@ var LDAvis = function(to_select, data_or_file_name) {
                 .attr("class", "bubble-tool") //  set class so we can remove it when highlight_off is called
                 .style("text-anchor", "middle")
                 .style("font-size", "16px")
-                .text("Top-" + R + " Most Relevant Terms for Topic " + topic_ind + " (" + Freq + "% of tokens)");
+                .text("Top-" + R + " Most Relevant Terms for Topic " + topicN + " (" + Freq + "% of tokens)");
 
             // grab the bar-chart data for this topic only:
             var dat2 = lamData.filter(function(d) {
-                return d.Category == "Topic" + topic_ind;
+                return d.Category == "Topic" + topicN;
             });
 
             // define relevance:
@@ -1233,7 +1233,8 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // display sample docs
             var docs = "";
-            for (var i = 0; i < 10; i++) {
+            var topic_ind = topicN - 1;
+            for (var i = 0; i < Math.min(10, sampleDocs[topic_ind].length); i++) {
                 docs = docs + sampleDocs[topic_ind][i][0] + '\n';
             }            
             d3.select('#' + sampleDocsID)
