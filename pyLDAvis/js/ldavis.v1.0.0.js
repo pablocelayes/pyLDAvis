@@ -39,6 +39,7 @@ var LDAvis = function(to_select, data_or_file_name) {
         },
         topicLabels, // customizable labels for topics ( initially just numbers )
         sampleDocs, // text samples from each topic
+        vocab, // vocabulary in order
         showTopics, // boolean flags indicating which topics to show or hide
         color1 = "#1f77b4", // baseline color for default topic circles and overall term frequencies
         color2 = "#d62728"; // 'highlight' color for selected topics and term-topic frequencies
@@ -87,6 +88,7 @@ var LDAvis = function(to_select, data_or_file_name) {
     var topicToggle = topicID + "-toggle";
     var topicClear = topicID + "-clear";
     var vizDataSaver = topicID + "-vizsaver";    
+    var vizDataLoader = topicID + "-vizloader";    
 
     var leftPanelID = visID + "-leftpanel";
     var barFreqsID = visID + "-bar-freqs";
@@ -119,6 +121,19 @@ var LDAvis = function(to_select, data_or_file_name) {
         return Array.apply(null, Array(size)).map(Number.prototype.valueOf,1);
     }
 
+    function insertLinebreaks(d) {
+        var el = d3.select(this);
+        var lines = el.text().split('\n');
+        console.log(lines[0]);
+        el.text('');
+
+        for (var i = 0; i < lines.length; i++) {
+            var tspan = el.append('tspan').text(lines[i]);
+            if (i > 0)
+                tspan.attr('x', 0).attr('dy', '25');
+        }
+    }
+
     function visualize(data) {
 
         // set the number of topics to global variable K:
@@ -130,6 +145,8 @@ var LDAvis = function(to_select, data_or_file_name) {
         topicLabels = data['mdsDat']['topics'];
 
         sampleDocs = data['sample.docs'];
+
+        vocab = data['vocab'];
 
         var nTopics = topicLabels.length;
         showTopics = onesArray(nTopics);
@@ -269,6 +286,32 @@ var LDAvis = function(to_select, data_or_file_name) {
                 // TODO: save to data as well
             });
 
+        function load_json(path) {
+           var request = new XMLHttpRequest();
+           request.open("GET", path, false);
+           request.overrideMimeType("text/plain");
+           request.send(null)
+           return JSON.parse(request.responseText);            
+
+// xmlhttp = new XMLHttpRequest();
+// xmlhttp.open("GET",filePath,false);
+// xmlhttp.overrideMimeType('text/plain');
+// xmlhttp.send(null);
+// //maybe check status !=404 here
+// var fileContent = xmlhttp.responseText;
+// var fileArray = fileContent.split('\n')
+// var n = fileArray.length;
+
+        }
+
+        d3.select("#" + vizDataLoader)
+            .on("click", function() {
+                // load viz data from json file
+                data = load_json("vizdata.json");
+                // data = require("vizdata.json");
+                state_reset();
+                state_save(true);
+            });
 
         // create linear scaling to pixels (and add some padding on outer region of scatterplot)
         var xrange = d3.extent(mdsData, function(d) {
@@ -733,6 +776,11 @@ var LDAvis = function(to_select, data_or_file_name) {
             viz_save.innerHTML = "Save Viz";
             topicDiv.appendChild(viz_save);
 
+            var viz_load = document.createElement("button");
+            viz_load.setAttribute("id", vizDataLoader);
+            viz_load.setAttribute("style", "margin-left: 5px");
+            viz_load.innerHTML = "Load Viz";
+            topicDiv.appendChild(viz_load);
 
             // lambda inputs
             //var lambdaDivLeft = 8 + mdswidth + margin.left + termwidth;
@@ -1214,28 +1262,14 @@ var LDAvis = function(to_select, data_or_file_name) {
             //.attr("class", "xaxis")
                 .call(xAxis);
 
-
-            var insertLinebreaks = function (d) {
-                var el = d3.select(this);
-                var lines = el.text().split('\n');
-                console.log(lines[0]);
-                el.text('');
-
-                for (var i = 0; i < lines.length; i++) {
-                    var tspan = el.append('tspan').text(lines[i]);
-                    if (i > 0)
-                        tspan.attr('x', 0).attr('dy', '25');
-                }
-            };
-
             // svg.selectAll('g.x.axis g text').each(insertLinebreaks);
 
-
-            // display sample docs
+            // display sample tweets for topic
             var docs = "";
             var topic_ind = topicN - 1;
-            for (var i = 0; i < Math.min(10, sampleDocs[topic_ind].length); i++) {
-                docs = docs + sampleDocs[topic_ind][i][0] + '\n';
+            var topic_tweets = sampleDocs[topic_ind]['tweets'];
+            for (var i = 0; i < Math.min(10, topic_tweets.length); i++) {
+                docs = docs + topic_tweets[i] + '\n';
             }            
             d3.select('#' + sampleDocsID)
                 .text(docs);
@@ -1327,6 +1361,7 @@ var LDAvis = function(to_select, data_or_file_name) {
             term_on(term);
             state_save(true);
         }
+
         // updates vis when a term is selected via click or hover
         function term_on(term) {
             if (term == null) return null;
@@ -1384,6 +1419,24 @@ var LDAvis = function(to_select, data_or_file_name) {
             // Alter the guide
             d3.select(to_select + " .circleGuideTitle")
                 .text("Conditional topic distribution given term = '" + term.innerHTML + "'");
+
+            // Display sample tweets for current topic containing the given term
+            var topicN = document.getElementById(topicID).value;
+            
+            var term_ind = vocab.indexOf(Term);
+            var topic_ind = topicN - 1;
+
+            var docs = "";
+            var topic_tweets = sampleDocs[topic_ind]['tweets'];
+            var tweets_for_term_inds = sampleDocs[topic_ind]['tweets_for_term'][term_ind];
+            for (var i = 0; i < Math.min(10, tweets_for_term_inds.length); i++) {
+                docs = docs + topic_tweets[tweets_for_term_inds[i]] + '\n';
+            }            
+            d3.select('#' + sampleDocsID)
+                .text(docs);
+
+            d3.selectAll('#' + sampleDocsID)
+                .each(insertLinebreaks);                
         }
 
         function term_off(term) {

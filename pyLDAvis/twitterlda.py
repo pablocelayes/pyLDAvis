@@ -9,6 +9,7 @@ import pyLDAvis
 import numpy as np
 from os.path import join
 from os import listdir
+from random import shuffle
 
 def _get_doc_lengths(model_data_path):
     with open(join(model_data_path, 'DocLengths.txt')) as f:
@@ -19,32 +20,47 @@ def _get_term_freqs(model_data_path):
     with open(join(model_data_path, 'TermFreqs.txt')) as f:
         return [int(l.strip()) for l in f.readlines() if l]
 
-def _get_sample_docs(model_data_path,  n_topics, n_docs=10):
+def _get_sample_docs(model_data_path, n_topics, vocab, sample_size_per_topic=100):
+    """
+       For each topic and term we generate a set of sample tweets
+       within the topic containing the given term.
+    """
     labeledtweets_path = join(model_data_path, 'TextWithLabel')
 
     rawtweets_path = '/'.join(model_data_path.split('/')[:-1])\
                         .replace('ModelRes', 'rawtweets')
 
-    clusters = [[] for i in range(n_topics)]
-    for userfname in listdir(labeledtweets_path):
+    sample_docs_data = [
+        {'tweets': [],
+         'tweets_for_term': [[] for i in range(len(vocab))]
+        } for i in range(n_topics)
+    ]
+
+    userfnames = listdir(labeledtweets_path)
+    shuffle(userfnames) # for random sampling
+
+    for userfname in userfnames:
         labeled_tweets = open(join(labeledtweets_path, userfname)).readlines()
         raw_tweets = open(join(rawtweets_path, userfname)).readlines()
 
         for raw, labeled in zip(raw_tweets, labeled_tweets):
             _, topic, terms = labeled.split(':')
             topic_ind = int(topic.split('=')[-1])
-            # naive relevance just by proportion of terms coming from main topic
-            # TODO: implement something better
-            terms = terms.strip().split()
-            n_terms = len(terms) or 1
-            n_topic_terms = len([t for t in terms if t.split('/')[-1] == str(topic_ind)])
-            relevance = n_topic_terms * 1.0 / n_terms
-            clusters[topic_ind].append((raw.strip(), relevance))
+            topic_data = sample_docs_data[topic_ind]
 
-    for t in range(n_topics):
-        clusters[t] = sorted(clusters[t], key= lambda x: -x[1])[:n_docs]    
-    
-    return clusters    
+            tweet_ind = len(topic_data['tweets'])
+            topic_data['tweets'].append(raw.strip())
+
+            for t in terms.strip().split():
+                term, label = t.split('/')
+                if label == str(topic_ind):
+                    topic_data['tweets_for_term'][vocab.index(term)].append(tweet_ind)                    
+
+        if all([len(d['tweets']) >= sample_size_per_topic for d in sample_docs_data]):
+            break
+
+    return sample_docs_data 
+
 
 def _get_vocab(model_data_path):
     with open(join(model_data_path, 'uniWordMap.txt')) as f:
@@ -80,7 +96,7 @@ def _extract_data(model_data_path, ignore_topics=[], ignore_terms=[]):
     term_freqs = _get_term_freqs(model_data_path)
     topic_term_dists = _get_topic_term_dists(model_data_path)
     n_topics = topic_term_dists.shape[0]
-    sample_docs = _get_sample_docs(model_data_path, n_topics)
+    sample_docs = _get_sample_docs(model_data_path, n_topics, vocab)
 
     assert len(term_freqs) == len(vocab), \
         ('Term frequencies and vocabulary are of different sizes, {} != {}.'
