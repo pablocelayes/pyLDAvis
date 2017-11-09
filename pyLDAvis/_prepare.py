@@ -284,8 +284,8 @@ def _token_table(topic_info, term_topic_freq, vocab, term_frequency):
    return token_table.sort_values(by=['Term', 'Topic'])
 
 
-def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency, sample_docs, \
-            R=30, lambda_step=0.01, mds=js_PCoA, n_jobs=-1, \
+def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequency, \
+            sample_docs=[], R=30, lambda_step=0.01, mds=js_PCoA, n_jobs=-1, \
             plot_opts={'xlab': 'PC1', 'ylab': 'PC2'}, sort_topics=True):
    """Transforms the topic model distributions and related corpus data into
    the data structures needed for the visualization.
@@ -306,8 +306,8 @@ def prepare(topic_term_dists, doc_topic_dists, doc_lengths, vocab, term_frequenc
         The count of each particular term over the entire corpus. The ordering
         of these counts should correspond with `vocab` and `topic_term_dists`.
     sample_docs: array-like, shape `n_topics`
-        For each topic, a list of sample tweets and mappings from
-        terms to sample tweets within the topic containing the given term
+        For each topic, a list of sample docs/tweets and mappings from
+        terms to sample docs/tweets within the topic containing the given term
     R : int
         The number of terms to display in the barcharts of the visualization.
         Default is 30. Recommended to be roughly between 10 and 50.

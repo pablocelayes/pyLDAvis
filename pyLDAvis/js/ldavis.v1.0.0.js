@@ -458,14 +458,16 @@ var LDAvis = function(to_select, data_or_file_name) {
 
 
         // Add a box for displaying sample docs 
-        d3.select("#" + leftPanelID).append("text")
-            .attr("x", 10)
-            .attr("y", mdsheight + 2 * newLarge + 30)
-            .attr("height", sampleboxheight)
-            // .attr("width", barguide.width)            
-            .attr("id", sampleDocsID)
-            .style("font-size", "16px")
-            .text("Sample docs");
+        if(sampleDocs.length) {
+            d3.select("#" + leftPanelID).append("text")
+                .attr("x", 10)
+                .attr("y", mdsheight + 2 * newLarge + 30)
+                .attr("height", sampleboxheight)
+                // .attr("width", barguide.width)            
+                .attr("id", sampleDocsID)
+                .style("font-size", "16px")
+                .text("Sample docs");            
+        }
 
         // bind mdsData to the points in the left panel:
         var points = mdsplot.selectAll("points")
@@ -1264,20 +1266,21 @@ var LDAvis = function(to_select, data_or_file_name) {
 
             // svg.selectAll('g.x.axis g text').each(insertLinebreaks);
 
-            // display sample tweets for topic
-            var docs = "";
-            var topic_ind = topicN - 1;
-            var topic_tweets = sampleDocs[topic_ind]['tweets'];
-            for (var i = 0; i < Math.min(10, topic_tweets.length); i++) {
-                docs = docs + topic_tweets[i] + '\n';
-            }            
-            d3.select('#' + sampleDocsID)
-                .text(docs);
+            // display sample docs for topic
+            if (sampleDocs.length) {
+                var docs = "";
+                var topic_ind = topicN - 1;
+                var topic_docs = sampleDocs[topic_ind]['docs'];
+                for (var i = 0; i < Math.min(10, topic_docs.length); i++) {
+                    docs = docs + topic_docs[i] + '\n';
+                }            
+                d3.select('#' + sampleDocsID)
+                    .text(docs);
 
-            d3.selectAll('#' + sampleDocsID)
-                .each(insertLinebreaks);
+                d3.selectAll('#' + sampleDocsID)
+                    .each(insertLinebreaks);                
+            }
         }
-
 
         function topic_off(circle) {
             if (circle == null) return circle;
@@ -1420,17 +1423,17 @@ var LDAvis = function(to_select, data_or_file_name) {
             d3.select(to_select + " .circleGuideTitle")
                 .text("Conditional topic distribution given term = '" + term.innerHTML + "'");
 
-            // Display sample tweets for current topic containing the given term
+            // Display sample docs for current topic containing the given term
             var topicN = document.getElementById(topicID).value;
             
             var term_ind = vocab.indexOf(Term);
             var topic_ind = topicN - 1;
 
             var docs = "";
-            var topic_tweets = sampleDocs[topic_ind]['tweets'];
-            var tweets_for_term_inds = sampleDocs[topic_ind]['tweets_for_term'][term_ind];
-            for (var i = 0; i < Math.min(10, tweets_for_term_inds.length); i++) {
-                docs = docs + topic_tweets[tweets_for_term_inds[i]] + '\n';
+            var topic_docs = sampleDocs[topic_ind]['docs'];
+            var docs_for_term_inds = sampleDocs[topic_ind]['docs_for_term'][term_ind];
+            for (var i = 0; i < Math.min(10, docs_for_term_inds.length); i++) {
+                docs = docs + topic_docs[docs_for_term_inds[i]] + '\n';
             }            
             d3.select('#' + sampleDocsID)
                 .text(docs);
