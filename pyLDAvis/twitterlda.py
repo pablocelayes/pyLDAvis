@@ -20,7 +20,7 @@ def _get_term_freqs(model_data_path):
     with open(join(model_data_path, 'TermFreqs.txt')) as f:
         return [int(l.strip()) for l in f.readlines() if l]
 
-def _get_sample_docs(model_data_path, n_topics, vocab, sample_size_per_topic=100):
+def _get_sample_docs(model_data_path, n_topics, vocab, include_urls=False, sample_size_per_topic=1000):
     """
        For each topic and term we generate a set of sample tweets
        within the topic containing the given term.
@@ -47,6 +47,9 @@ def _get_sample_docs(model_data_path, n_topics, vocab, sample_size_per_topic=100
             _, topic, terms = labeled.split(':')
             topic_ind = int(topic.split('=')[-1])
             topic_data = sample_docs_data[topic_ind]
+
+            if not include_urls and 'http' in raw:
+                continue
 
             tweet_ind = len(topic_data['tweets'])
             topic_data['tweets'].append(raw.strip())
