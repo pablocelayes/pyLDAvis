@@ -31,8 +31,8 @@ def _get_sample_docs(model_data_path, n_topics, vocab, include_urls=False, sampl
                         .replace('ModelRes', 'rawtweets')
 
     sample_docs_data = [
-        {'tweets': [],
-         'tweets_for_term': [[] for i in range(len(vocab))]
+        {'docs': [],
+         'docs_for_term': [[] for i in range(len(vocab))]
         } for i in range(n_topics)
     ]
 
@@ -51,15 +51,15 @@ def _get_sample_docs(model_data_path, n_topics, vocab, include_urls=False, sampl
             if not include_urls and 'http' in raw:
                 continue
 
-            tweet_ind = len(topic_data['tweets'])
-            topic_data['tweets'].append(raw.strip())
+            tweet_ind = len(topic_data['docs'])
+            topic_data['docs'].append(raw.strip())
 
             for t in terms.strip().split():
                 term, label = t.split('/')
                 if label == str(topic_ind):
-                    topic_data['tweets_for_term'][vocab.index(term)].append(tweet_ind)                    
+                    topic_data['docs_for_term'][vocab.index(term)].append(tweet_ind)                    
 
-        if all([len(d['tweets']) >= sample_size_per_topic for d in sample_docs_data]):
+        if all([len(d['docs']) >= sample_size_per_topic for d in sample_docs_data]):
             break
 
     return sample_docs_data 
